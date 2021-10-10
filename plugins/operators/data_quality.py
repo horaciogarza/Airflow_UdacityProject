@@ -21,15 +21,30 @@ class DataQualityOperator(BaseOperator):
 
         redshift_hook = PostgresHook(self.redshift_conn_id)
 
+        dq_checks={"check_sql":"SELECT COUNT(*) FROM " , "expected_result": 1}
+         
         for table in self.tables:
             self.log.info(f"DATA QUALITY VERIFICATION FOR TABLE {table}")
 
-            records = redshift_hook.get_records(f"SELECT COUNT(*) FROM {table}")
+            sql_query_dq = dq_checks["check_sql"] + f" {table} "
+            
+            records = redshift_hook.get_records(sql_query_dq)
 
-            if len(records[0]) < 1 or len(records) < 1:
+            if len(records) < dq_checks["expected_result"]:
                 raise ValueError(f"DQ FAILURE table {table} has no data")
             num_records = records[0][0]
-
-            if num_records < 1:
+            
+            if num_records < dq_checks["expected_result"]:
                 raise ValueError(f"DQ FAILURE table {table} has no data")
             self.log.info(f"DQ SUCCESS for table {table} with {records[0][0]} records")
+            
+            #if len(records[0]) < 1 or len(records) < 1:
+                #raise ValueError(f"DQ FAILURE table {table} has no data")
+            #num_records = records[0][0]
+
+            #if num_records < 1:
+               # raise ValueError(f"DQ FAILURE table {table} has no data")
+            #self.log.info(f"DQ SUCCESS for table {table} with {records[0][0]} records")
+            
+            
+            
