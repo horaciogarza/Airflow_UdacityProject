@@ -41,17 +41,23 @@ class StageToRedshiftOperator(BaseOperator):
         rendered_key = self.s3_key.format(**context)
         s3_path = f"s3://{self.s3_bucket}/{rendered_key}"
 
+        
         if self.file_type == "json":
+            self.log.info("Copying has started - JSON file type")
             command = f"COPY {self.table} FROM '{s3_path}' ACCESS_KEY_ID '{credentials.access_key}' SECRET_ACCESS_KEY" \
                 f" '{credentials.secret_key}' JSON '{self.json_path}' COMPUPDATE OFF"
             redshift.run(command)
+            
+            self.log.info("Copy finished")
 
         if self.file_type == "csv":
-
+            self.log.info("Copying has started - CSV file type")
             command = f"COPY {self.table} FROM '{s3_path}' ACCESS_KEY_ID '{credentials.access_key}' " \
                 f"SECRET_ACCESS_KEY '{credentials.secret_key}' IGNOREHEADER {self.ignore_headers} " \
                 f"DELIMITER '{self.delimiter}'"
             redshift.run(command)
+            
+            self.log.info("Copy finished")
 
 
 
